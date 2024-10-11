@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Calculator, Zap, Scissors } from "lucide-react";
+import { FaCalculator, FaBolt, FaHandRock } from "react-icons/fa";
 import Navbar from "@/components/Navbar";
 
 interface FeatureCardProps {
@@ -71,19 +71,19 @@ export default function Home(): JSX.Element {
           href="/playground/calculator"
           title="Calculator"
           description="Crunch numbers effortlessly with our sleek, intuitive calculator. Perfect for quick calculations on the go!"
-          icon={Calculator}
+          icon={FaCalculator}
         />
         <FeatureCard
           href="/playground/bouncing-pixels"
           title="Bouncing Pixels"
           description="Watch in awe as pixels come to life! Click to create mesmerizing bounces and explosions of digital confetti."
-          icon={Zap}
+          icon={FaBolt}
         />
         <FeatureCard
           href="/playground/rock-paper-scissors"
           title="Rock, Paper, Scissors"
           description="Challenge the computer to the classic game of Rock, Paper, Scissors. Can you outsmart the algorithm?"
-          icon={Scissors}
+          icon={FaHandRock}
         />
       </motion.div>
     </main>

@@ -2,7 +2,13 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { AlertCircle, Trophy } from "lucide-react";
+import {
+  FaHandRock,
+  FaHandPaper,
+  FaHandScissors,
+  FaExclamationCircle,
+  FaTrophy,
+} from "react-icons/fa";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -12,15 +18,15 @@ const choices = ["rock", "paper", "scissors"] as const;
 type Choice = (typeof choices)[number];
 
 const ChoiceIcon: React.FC<{ choice: Choice }> = ({ choice }) => {
-  const icons: Record<Choice, string> = {
-    rock: "✊",
-    paper: "✋",
-    scissors: "✌️",
+  const icons: Record<Choice, React.ReactNode> = {
+    rock: <FaHandRock className="text-4xl" />,
+    paper: <FaHandPaper className="text-4xl" />,
+    scissors: <FaHandScissors className="text-4xl" />,
   };
-  return <span className="text-4xl">{icons[choice]}</span>;
+  return icons[choice];
 };
 
-export default function RockPaperScissors() {
+export default function RockPaperScissors(): JSX.Element {
   const [userChoice, setUserChoice] = useState<Choice | null>(null);
   const [computerChoice, setComputerChoice] = useState<Choice | null>(null);
   const [result, setResult] = useState<string | null>(null);
@@ -131,7 +137,7 @@ export default function RockPaperScissors() {
               <CardTitle className="flex justify-between items-center">
                 <span>Game</span>
                 <div className="flex items-center">
-                  <Trophy className="mr-2" />
+                  <FaTrophy className="mr-2" />
                   <span>Best Streak: {bestStreak}</span>
                 </div>
               </CardTitle>
@@ -153,7 +159,7 @@ export default function RockPaperScissors() {
 
               {result && userChoice && computerChoice && (
                 <Alert className="mb-4">
-                  <AlertCircle className="h-4 w-4" />
+                  <FaExclamationCircle className="h-4 w-4" />
                   <AlertTitle>Game Result</AlertTitle>
                   <AlertDescription>
                     You chose <strong>{userChoice}</strong>, Computer chose{" "}
@@ -187,15 +193,18 @@ export default function RockPaperScissors() {
             <CardContent className="pt-6">
               <ul className="space-y-2">
                 {gameHistory.map((game, index) => (
-                  <li key={index} className="bg-gray-100 p-2 rounded">
+                  <li
+                    key={index}
+                    className="bg-gray-100 p-2 rounded flex items-center"
+                  >
                     <span className="mr-2">
                       <ChoiceIcon choice={game.userChoice} />
                     </span>
-                    vs
+                    <span className="mx-2">vs</span>
                     <span className="mx-2">
                       <ChoiceIcon choice={game.computerChoice} />
                     </span>
-                    - {game.result}
+                    <span>- {game.result}</span>
                   </li>
                 ))}
               </ul>
