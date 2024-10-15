@@ -52,7 +52,7 @@ export default function Home(): JSX.Element {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-4">
+        <h1 className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-4 py-10">
           Next.js Playground
         </h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -83,6 +83,12 @@ export default function Home(): JSX.Element {
           href="/playground/rock-paper-scissors"
           title="Rock, Paper, Scissors"
           description="Challenge the computer to the classic game of Rock, Paper, Scissors. Can you outsmart the algorithm?"
+          icon={FaHandRock}
+        />
+        <FeatureCard
+          href="/playground/discord-clone"
+          title="A cheap discord clone"
+          description="Does not work..."
           icon={FaHandRock}
         />
       </motion.div>
