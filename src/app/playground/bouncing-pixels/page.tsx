@@ -1,78 +1,124 @@
-// src/app/playground/bouncing-pixels/page.tsx
-
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Navbar from "@/components/Navbar"; // Import Navbar
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { AlertCircle, Zap } from "lucide-react";
 
 interface Pixel {
   x: number;
   y: number;
   dx: number;
   dy: number;
-  originalDx: number;
-  originalDy: number;
+  baseSpeed: number;
+  color: string;
+  size: number;
 }
 
 export default function BouncingPixels() {
   const [pixels, setPixels] = useState<Pixel[]>([]);
+  const [pixelCount, setPixelCount] = useState(80);
+  const [explosionForce, setExplosionForce] = useState(10);
+  const [recoveryRate, setRecoveryRate] = useState(0.05);
+  const [performanceMode, setPerformanceMode] = useState(false);
+  const [minSpeed, setMinSpeed] = useState(0.5);
   const boxRef = useRef<HTMLDivElement | null>(null);
+  const animationRef = useRef<number>();
+  const lastUpdateTimeRef = useRef<number>(0);
 
-  const PIXEL_SIZE = 10; // Pixel size is 2x2
+  const BOX_SIZE = 400;
+  const HIGH_PIXEL_THRESHOLD = 500;
+  const FPS = performanceMode ? 60 : 30;
 
-  // Generate initial pixels
+  const generateRandomColor = () => {
+    return `hsl(${Math.random() * 360}, 100%, 50%)`;
+  };
+
+  const generatePixels = useCallback(
+    (count: number) => {
+      return Array.from({ length: count }).map(() => {
+        const baseSpeed = Math.max(
+          (Math.random() * 1.5 + 0.5) * (performanceMode ? 0.5 : 1),
+          minSpeed
+        );
+        const angle = Math.random() * 2 * Math.PI;
+        const size = Math.random() * 8 + 2;
+        return {
+          x: Math.random() * (BOX_SIZE - size),
+          y: Math.random() * (BOX_SIZE - size),
+          dx: Math.cos(angle) * baseSpeed,
+          dy: Math.sin(angle) * baseSpeed,
+          baseSpeed,
+          color: generateRandomColor(),
+          size,
+        };
+      });
+    },
+    [performanceMode, minSpeed]
+  );
+
   useEffect(() => {
-    const initialPixels = Array.from({ length: 20 }).map(() => {
-      const dx = (Math.random() - 0.5) * 5;
-      const dy = (Math.random() - 0.5) * 5;
-      return {
-        x: Math.random() * 400, // Random x position
-        y: Math.random() * 400, // Random y position
-        dx, // Random x velocity
-        dy, // Random y velocity
-        originalDx: dx, // Store the original x velocity for slow down
-        originalDy: dy, // Store the original y velocity for slow down
-      };
-    });
-    setPixels(initialPixels);
-  }, []);
+    setPixels(generatePixels(pixelCount));
+  }, [pixelCount, generatePixels]);
 
-  // Handle pixels bouncing inside the box and slowing down over time
-  useEffect(() => {
-    const interval = setInterval(() => {
+  const updatePixels = useCallback(
+    (time: number) => {
+      if (time - lastUpdateTimeRef.current < 1000 / FPS) {
+        animationRef.current = requestAnimationFrame(updatePixels);
+        return;
+      }
+
+      lastUpdateTimeRef.current = time;
+
       setPixels((prevPixels) =>
         prevPixels.map((pixel) => {
-          const { x, y, dx, dy, originalDx, originalDy } = pixel;
+          const { x, y, dx, dy, baseSpeed, size } = pixel;
 
-          // Gradually slow down the velocity to return to the original speed
-          const slowdownFactor = 0.98;
-          let newDx = dx * slowdownFactor + originalDx * (1 - slowdownFactor);
-          let newDy = dy * slowdownFactor + originalDy * (1 - slowdownFactor);
+          const currentSpeed = Math.sqrt(dx * dx + dy * dy);
+          const speedDiff = Math.max(baseSpeed, minSpeed) - currentSpeed;
+          const adjustedDx =
+            dx + (dx / currentSpeed) * speedDiff * recoveryRate;
+          const adjustedDy =
+            dy + (dy / currentSpeed) * speedDiff * recoveryRate;
 
-          // Set a minimum speed so the pixels never stop
-          const MIN_SPEED = 0.5; // Minimum speed threshold
-          if (Math.abs(newDx) < MIN_SPEED) newDx = MIN_SPEED * Math.sign(newDx);
-          if (Math.abs(newDy) < MIN_SPEED) newDy = MIN_SPEED * Math.sign(newDy);
+          const newDx =
+            x + adjustedDx > BOX_SIZE - size || x + adjustedDx < 0
+              ? -adjustedDx
+              : adjustedDx;
+          const newDy =
+            y + adjustedDy > BOX_SIZE - size || y + adjustedDy < 0
+              ? -adjustedDy
+              : adjustedDy;
 
-          // Bounce off walls (considering pixel size)
-          if (x + newDx > 400 - PIXEL_SIZE || x + newDx < 0) newDx = -newDx;
-          if (y + newDy > 400 - PIXEL_SIZE || y + newDy < 0) newDy = -newDy;
+          const finalSpeed = Math.sqrt(newDx * newDx + newDy * newDy);
+          const scaleFactor = finalSpeed < minSpeed ? minSpeed / finalSpeed : 1;
 
           return {
             ...pixel,
-            x: x + newDx,
-            y: y + newDy,
-            dx: newDx,
-            dy: newDy,
+            x: x + newDx * scaleFactor,
+            y: y + newDy * scaleFactor,
+            dx: newDx * scaleFactor,
+            dy: newDy * scaleFactor,
           };
         })
       );
-    }, 16); // 60 FPS
 
-    return () => clearInterval(interval);
-  }, []);
+      animationRef.current = requestAnimationFrame(updatePixels);
+    },
+    [recoveryRate, FPS, minSpeed]
+  );
 
-  // Explode pixels when clicking
+  useEffect(() => {
+    animationRef.current = requestAnimationFrame(updatePixels);
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [updatePixels]);
+
   const handleClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     const box = boxRef.current?.getBoundingClientRect();
     if (!box) return;
@@ -83,39 +129,156 @@ export default function BouncingPixels() {
     setPixels((prevPixels) =>
       prevPixels.map((pixel) => {
         const angle = Math.atan2(pixel.y - clickY, pixel.x - clickX);
-        const speed = Math.random() * 10 + 5;
+        const speed = Math.max(
+          (Math.random() * explosionForce + pixel.baseSpeed) *
+            (performanceMode ? 0.5 : 1),
+          minSpeed
+        );
         return {
           ...pixel,
           dx: Math.cos(angle) * speed,
           dy: Math.sin(angle) * speed,
+          color: generateRandomColor(),
         };
       })
     );
   };
 
+  const handleResetPixels = () => {
+    setPixelCount(80);
+    setExplosionForce(10);
+    setRecoveryRate(0.05);
+    setMinSpeed(0.7);
+    setPixels(generatePixels(80));
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <Navbar /> {/* Add Navbar */}
-      <div className="mb-6 mt-16">
-        <h1 className="text-3xl font-bold text-blue-600">Bouncing Pixels</h1>
-        <p className="text-gray-800">
-          Click anywhere to explode the pixels! They will slow down afterward.
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-blue-100 to-purple-100 p-4">
+      <div className="mb-6 mt-16 text-center">
+        <h1 className="text-4xl font-bold text-blue-600 mb-2">
+          Bouncing Pixels
+        </h1>
+        <p className="text-gray-700">
+          Click anywhere to explode the pixels! They will gradually return to
+          their original speed.
         </p>
+      </div>
+      <div className="flex flex-wrap gap-4 mb-4">
+        <div className="flex items-center">
+          <label
+            htmlFor="pixelCount"
+            className="mr-2 text-sm font-medium text-gray-700"
+          >
+            Pixel Count:
+          </label>
+          <Input
+            id="pixelCount"
+            type="number"
+            min="1"
+            max="2000"
+            value={pixelCount}
+            onChange={(e) => setPixelCount(Number(e.target.value))}
+            className="w-20"
+          />
+          {pixelCount > HIGH_PIXEL_THRESHOLD && (
+            <span className="ml-2 text-yellow-600">
+              <AlertCircle className="inline mr-1" size={16} />
+              High pixel count may affect performance
+            </span>
+          )}
+        </div>
+        <div className="flex items-center">
+          <label
+            htmlFor="explosionForce"
+            className="mr-2 text-sm font-medium text-gray-700"
+          >
+            Explosion Force:
+          </label>
+          <Slider
+            id="explosionForce"
+            min={1}
+            max={20}
+            step={1}
+            value={[explosionForce]}
+            onValueChange={(value) => setExplosionForce(value[0])}
+            className="w-32"
+          />
+        </div>
+        <div className="flex items-center">
+          <label
+            htmlFor="recoveryRate"
+            className="mr-2 text-sm font-medium text-gray-700"
+          >
+            Recovery Rate:
+          </label>
+          <Slider
+            id="recoveryRate"
+            min={0.01}
+            max={0.1}
+            step={0.01}
+            value={[recoveryRate]}
+            onValueChange={(value) => setRecoveryRate(value[0])}
+            className="w-32"
+          />
+        </div>
+        <div className="flex items-center">
+          <label
+            htmlFor="minSpeed"
+            className="mr-2 text-sm font-medium text-gray-700"
+          >
+            Min Speed:
+          </label>
+          <Slider
+            id="minSpeed"
+            min={0.1}
+            max={2}
+            step={0.1}
+            value={[minSpeed]}
+            onValueChange={(value) => setMinSpeed(value[0])}
+            className="w-32"
+          />
+        </div>
+        <div className="flex items-center">
+          <label
+            htmlFor="performanceMode"
+            className="mr-2 text-sm font-medium text-gray-700"
+          >
+            Performance Mode:
+          </label>
+          <Switch
+            id="performanceMode"
+            checked={performanceMode}
+            onCheckedChange={setPerformanceMode}
+          />
+          <Zap className="ml-2" size={16} />
+        </div>
+        <Button onClick={handleResetPixels}>Reset Pixels</Button>
       </div>
       <div
         ref={boxRef}
         onClick={handleClick}
-        className="relative w-[400px] h-[400px] bg-white border border-gray-400 overflow-hidden"
+        className="relative w-[400px] h-[400px] bg-white border-4 border-blue-500 rounded-lg shadow-lg overflow-hidden cursor-pointer"
       >
         {pixels.map((pixel, index) => (
           <div
             key={index}
-            className="absolute w-2 h-2 bg-blue-600"
+            className={`absolute rounded-full ${
+              performanceMode ? "" : "transition-transform duration-100"
+            }`}
             style={{
+              width: `${pixel.size}px`,
+              height: `${pixel.size}px`,
+              backgroundColor: pixel.color,
               transform: `translate(${pixel.x}px, ${pixel.y}px)`,
             }}
           />
         ))}
+      </div>
+      <div className="mt-4 flex items-center text-gray-600">
+        <AlertCircle className="mr-2" size={16} />
+        <span className="text-sm">
+          Tip: Adjust the minimum speed to control how slow pixels can go!
+        </span>
       </div>
     </div>
   );
