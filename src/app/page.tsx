@@ -4,7 +4,6 @@ import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { FaCalculator, FaBolt, FaHandRock } from "react-icons/fa";
-import Navbar from "@/components/Navbar";
 
 interface FeatureCardProps {
   href: string;
@@ -45,7 +44,6 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
 export default function Home(): JSX.Element {
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4">
-      <Navbar />
       <motion.div
         className="text-center mt-10 mb-12"
         initial={{ opacity: 0, y: -20 }}
@@ -89,6 +87,12 @@ export default function Home(): JSX.Element {
           href="/playground/discord-clone"
           title="A cheap discord clone"
           description="Does not work..."
+          icon={FaHandRock}
+        />
+        <FeatureCard
+          href="/playground/lights-out"
+          title="Lights out game"
+          description="traditional lights out game"
           icon={FaHandRock}
         />
       </motion.div>

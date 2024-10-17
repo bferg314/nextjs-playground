@@ -1,17 +1,22 @@
-// src/app/playground/calculator/page.tsx
 "use client";
 
-import { useState } from "react";
-import Navbar from "@/components/Navbar"; // Use absolute import with @
+import { useState, useEffect } from "react";
+import Navbar from "@/components/Navbar";
+import { Moon, Sun } from "lucide-react";
 
 export default function Calculator() {
-  // State variables
   const [display, setDisplay] = useState("0");
   const [firstValue, setFirstValue] = useState<number | null>(null);
   const [operator, setOperator] = useState<string | null>(null);
   const [waitingForSecondValue, setWaitingForSecondValue] = useState(false);
+  const [history, setHistory] = useState<string[]>([]);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // Handle number input
+  useEffect(() => {
+    const savedMode = localStorage.getItem("calculatorDarkMode");
+    setIsDarkMode(savedMode === "true");
+  }, []);
+
   const inputNumber = (num: string) => {
     if (waitingForSecondValue) {
       setDisplay(num);
@@ -21,7 +26,6 @@ export default function Calculator() {
     }
   };
 
-  // Handle operator input
   const inputOperator = (op: string) => {
     const inputValue = parseFloat(display);
 
@@ -37,7 +41,6 @@ export default function Calculator() {
     setWaitingForSecondValue(true);
   };
 
-  // Perform calculation based on operator
   const performCalculation = (first: number, second: number, op: string) => {
     switch (op) {
       case "+":
@@ -48,25 +51,27 @@ export default function Calculator() {
         return first * second;
       case "/":
         return first / second;
+      case "%":
+        return first % second;
       default:
         return second;
     }
   };
 
-  // Handle equal sign
   const handleEqual = () => {
     const inputValue = parseFloat(display);
 
     if (operator && firstValue !== null) {
       const result = performCalculation(firstValue, inputValue, operator);
+      const calculation = `${firstValue} ${operator} ${inputValue} = ${result}`;
       setDisplay(String(result));
       setFirstValue(null);
       setOperator(null);
       setWaitingForSecondValue(false);
+      setHistory((prev) => [calculation, ...prev.slice(0, 4)]);
     }
   };
 
-  // Handle clear
   const handleClear = () => {
     setDisplay("0");
     setFirstValue(null);
@@ -74,128 +79,201 @@ export default function Calculator() {
     setWaitingForSecondValue(false);
   };
 
+  const handleBackspace = () => {
+    setDisplay((prev) => (prev.length > 1 ? prev.slice(0, -1) : "0"));
+  };
+
+  const handleSquareRoot = () => {
+    const value = Math.sqrt(parseFloat(display));
+    setDisplay(String(value));
+  };
+
+  const toggleDarkMode = () => {
+    setIsDarkMode((prev) => {
+      const newMode = !prev;
+      localStorage.setItem("calculatorDarkMode", String(newMode));
+      return newMode;
+    });
+  };
+
+  const buttonClass = `py-2 rounded transition-colors ${
+    isDarkMode ? "text-white hover:bg-gray-600" : "text-black hover:bg-gray-200"
+  }`;
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-200 p-4">
-      <Navbar /> {/* Add Navbar */}
-      <div className="bg-white rounded-lg shadow-lg p-6 w-80">
+    <div
+      className={`flex flex-col items-center justify-center min-h-screen p-4 ${
+        isDarkMode ? "bg-gray-800" : "bg-gray-200"
+      }`}
+    >
+      <div
+        className={`rounded-lg shadow-lg p-6 w-80 ${
+          isDarkMode ? "bg-gray-700" : "bg-white"
+        }`}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h2
+            className={`text-xl font-bold ${
+              isDarkMode ? "text-white" : "text-black"
+            }`}
+          >
+            Calculator
+          </h2>
+          <button onClick={toggleDarkMode} className="p-2 rounded-full">
+            {isDarkMode ? (
+              <Sun className="text-yellow-400" />
+            ) : (
+              <Moon className="text-gray-600" />
+            )}
+          </button>
+        </div>
         <div className="mb-4">
           <input
             type="text"
             readOnly
             value={display}
-            className="w-full text-right text-4xl p-2 border border-gray-300 rounded text-black"
+            className={`w-full text-right text-4xl p-2 border rounded ${
+              isDarkMode
+                ? "bg-gray-600 text-white border-gray-500"
+                : "bg-white text-black border-gray-300"
+            }`}
           />
         </div>
         <div className="grid grid-cols-4 gap-2">
-          {/* Row 1 */}
           <button
             onClick={handleClear}
-            className="col-span-2 bg-red-500 text-white py-2 rounded"
+            className={`${buttonClass} bg-red-500 text-white`}
           >
             AC
           </button>
           <button
+            onClick={handleBackspace}
+            className={`${buttonClass} ${
+              isDarkMode ? "bg-gray-600" : "bg-gray-300"
+            }`}
+          >
+            ←
+          </button>
+          <button
+            onClick={() => inputOperator("%")}
+            className={`${buttonClass} ${
+              isDarkMode ? "bg-gray-600" : "bg-gray-300"
+            }`}
+          >
+            %
+          </button>
+          <button
             onClick={() => inputOperator("/")}
-            className="bg-blue-500 text-white py-2 rounded"
+            className={`${buttonClass} bg-blue-500 text-white`}
           >
             ÷
           </button>
+          {[7, 8, 9].map((num) => (
+            <button
+              key={num}
+              onClick={() => inputNumber(String(num))}
+              className={`${buttonClass} ${
+                isDarkMode ? "bg-gray-600" : "bg-gray-100"
+              }`}
+            >
+              {num}
+            </button>
+          ))}
           <button
             onClick={() => inputOperator("*")}
-            className="bg-blue-500 text-white py-2 rounded"
+            className={`${buttonClass} bg-blue-500 text-white`}
           >
             ×
           </button>
-          {/* Row 2 */}
-          <button
-            onClick={() => inputNumber("7")}
-            className="bg-gray-100 text-black py-2 rounded"
-          >
-            7
-          </button>
-          <button
-            onClick={() => inputNumber("8")}
-            className="bg-gray-100 text-black py-2 rounded"
-          >
-            8
-          </button>
-          <button
-            onClick={() => inputNumber("9")}
-            className="bg-gray-100 text-black py-2 rounded"
-          >
-            9
-          </button>
+          {[4, 5, 6].map((num) => (
+            <button
+              key={num}
+              onClick={() => inputNumber(String(num))}
+              className={`${buttonClass} ${
+                isDarkMode ? "bg-gray-600" : "bg-gray-100"
+              }`}
+            >
+              {num}
+            </button>
+          ))}
           <button
             onClick={() => inputOperator("-")}
-            className="bg-blue-500 text-white py-2 rounded"
+            className={`${buttonClass} bg-blue-500 text-white`}
           >
             −
           </button>
-          {/* Row 3 */}
-          <button
-            onClick={() => inputNumber("4")}
-            className="bg-gray-100 text-black py-2 rounded"
-          >
-            4
-          </button>
-          <button
-            onClick={() => inputNumber("5")}
-            className="bg-gray-100 text-black py-2 rounded"
-          >
-            5
-          </button>
-          <button
-            onClick={() => inputNumber("6")}
-            className="bg-gray-100 text-black py-2 rounded"
-          >
-            6
-          </button>
+          {[1, 2, 3].map((num) => (
+            <button
+              key={num}
+              onClick={() => inputNumber(String(num))}
+              className={`${buttonClass} ${
+                isDarkMode ? "bg-gray-600" : "bg-gray-100"
+              }`}
+            >
+              {num}
+            </button>
+          ))}
           <button
             onClick={() => inputOperator("+")}
-            className="bg-blue-500 text-white py-2 rounded"
+            className={`${buttonClass} bg-blue-500 text-white`}
           >
             +
           </button>
-          {/* Row 4 */}
           <button
-            onClick={() => inputNumber("1")}
-            className="bg-gray-100 text-black py-2 rounded"
+            onClick={handleSquareRoot}
+            className={`${buttonClass} ${
+              isDarkMode ? "bg-gray-600" : "bg-gray-100"
+            }`}
           >
-            1
+            √
           </button>
-          <button
-            onClick={() => inputNumber("2")}
-            className="bg-gray-100 text-black py-2 rounded"
-          >
-            2
-          </button>
-          <button
-            onClick={() => inputNumber("3")}
-            className="bg-gray-100 text-black py-2 rounded"
-          >
-            3
-          </button>
-          <button
-            onClick={handleEqual}
-            className="row-span-2 bg-green-500 text-white py-2 rounded"
-            style={{ gridRow: "span 2" }}
-          >
-            =
-          </button>
-          {/* Row 5 */}
           <button
             onClick={() => inputNumber("0")}
-            className="col-span-2 bg-gray-100 text-black py-2 rounded"
+            className={`${buttonClass} ${
+              isDarkMode ? "bg-gray-600" : "bg-gray-100"
+            }`}
           >
             0
           </button>
           <button
             onClick={() => inputNumber(".")}
-            className="bg-gray-100 text-black py-2 rounded"
+            className={`${buttonClass} ${
+              isDarkMode ? "bg-gray-600" : "bg-gray-100"
+            }`}
           >
             .
           </button>
+          <button
+            onClick={handleEqual}
+            className={`${buttonClass} bg-green-500 text-white`}
+          >
+            =
+          </button>
         </div>
+        {history.length > 0 && (
+          <div
+            className={`mt-4 p-2 rounded ${
+              isDarkMode ? "bg-gray-600" : "bg-gray-100"
+            }`}
+          >
+            <h3
+              className={`text-sm font-bold mb-1 ${
+                isDarkMode ? "text-white" : "text-black"
+              }`}
+            >
+              History
+            </h3>
+            <ul
+              className={`text-sm ${
+                isDarkMode ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
+              {history.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );
