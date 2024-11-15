@@ -95,6 +95,12 @@ export default function Home(): JSX.Element {
           description="traditional lights out game"
           icon={FaHandRock}
         />
+        <FeatureCard
+          href="/playground/sound-circle"
+          title="Sound circle"
+          description="makes noise"
+          icon={FaHandRock}
+        />
       </motion.div>
     </main>
   );
