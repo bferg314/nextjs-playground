@@ -148,7 +148,7 @@ export default function BouncingPixels() {
     setPixelCount(80);
     setExplosionForce(10);
     setRecoveryRate(0.05);
-    setMinSpeed(0.7);
+    setMinSpeed(0.5);
     setPixels(generatePixels(80));
   };
 
