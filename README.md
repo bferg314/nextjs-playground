@@ -16,6 +16,19 @@ Pixels bounce inside a container, and you can click to explode them outward. Wat
 
 Play a game of Rock, Paper, Scissors against the computer. Track scores and see who wins!
 
+### 4. Discord Clone
+
+A basic Discord-style chat experiment (work in progress).
+
+### 5. Lights Out
+
+Play the classic Lights Out puzzle with adjustable grid sizes.
+
+### 6. Sound Circle
+
+Create melodic patterns with an interactive sound visualizer.
+
+
 ## How to Run
 
 1. Clone the repository:
