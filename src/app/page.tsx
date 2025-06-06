@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { FaCalculator, FaBolt, FaHandRock } from "react-icons/fa";
+import { FaCalculator, FaBolt, FaHandRock, FaClock } from "react-icons/fa";
 
 interface FeatureCardProps {
   href: string;
@@ -100,6 +100,12 @@ export default function Home(): JSX.Element {
           title="Sound circle"
           description="makes noise"
           icon={FaHandRock}
+        />
+        <FeatureCard
+          href="/playground/animated-clock"
+          title="Animated Clock"
+          description="An elegant analog and digital clock with smooth animations to track time with style."
+          icon={FaClock}
         />
       </motion.div>
     </main>

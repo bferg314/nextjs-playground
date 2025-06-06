@@ -20,6 +20,12 @@ export default function Navbar() {
           >
             Bouncing Pixels
           </Link>
+          <Link
+            href="/playground/animated-clock"
+            className="hover:text-gray-300 transition-colors"
+          >
+            Clock
+          </Link>
         </div>
       </div>
     </nav>
