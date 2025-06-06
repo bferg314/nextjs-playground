@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 
 export const metadata: Metadata = {
   title: "Playground",
-  description: "A nice place to play with Next.JS Concepts",
+  description: "A nice place to play with Next.js Concepts",
 };
 
 export default function RootLayout({
